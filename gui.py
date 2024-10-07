@@ -31,7 +31,9 @@ def main(page: ft.Page):
         json.dump("", f)
     # ページにボタンを追加
     page.add(name_input, play_button)
-
+def page_clean(page: ft.Page):
+    page.controls.clear()
+    page.update()
 def sab_page(url, page: ft.Page):
     # サーバー
     activetab.start_flask()
@@ -88,53 +90,51 @@ def sab_page(url, page: ft.Page):
             page.add(ft.Text(f"コンテスト情報が読み込み中{dot[:i]}\n開始までお待ちください"))
             page.update()
             time.sleep(0.3)
-            page.controls.clear()
-            page.update()
+            page_clean(page)
 def contest_loader(page,content_id):
     # curl
     questions, questions_url = contests(content_id)
     if not(questions or questions_url):
         return None
     #ページクリアー
-    page.controls.clear()
-    page.update()
-
+    page_clean(page)
+    #上のタブ部分
     def on_tab():
         page.add(ft.Column(controls=[ft.Container(content=tabs,width=500,height=50,)],expand=True ))
+    #設定
     def active_tab_change(event):
         global page_active_bool
         page_active_bool = event.control.value
         page.window.always_on_top = page_active_bool # 画面を固定するかどうか
+    #設定2
     def msg_hint_change(event):
         global msg_hint_bool
         msg_hint_bool = event.control.value
 
     def _tab(active_tab):
         global page_active_bool, msg_hint_bool
+        page_clean(page)
+        on_tab()
         match active_tab:
             case 0:
                 print("設定")
-                page.controls.clear()
-                page.update()
-                on_tab()
                 page.add( ft.Switch(label="画面を固定",on_change=active_tab_change, value=page_active_bool))  # Switchの作成
                 page.add( ft.Switch(label="例1のを表示",on_change=msg_hint_change, value=msg_hint_bool))  # Switchの作成
-                #自動クリップボードコピー
-                #自動tabチェンジ
-                page.update()
             case _:
-                page.controls.clear()
-                page.update()
-                on_tab()
                 active_tab_element(active_tab)
-                page.update()
+
+        page.update()
+    def example_question():
+        print("例を表示します")
 
     def active_tab_element(active_tab):
         print(questions[active_tab - 1])
         html_elements = get_url_data(questions_url[active_tab - 1])
         controls = []
-        elevate_button = []
+        elevate1_button = []
+        elevate2_button = []
 
+        """
         for element in html_elements:
             controls.append(ft.Container(
                 ft.Column([
@@ -143,13 +143,14 @@ def contest_loader(page,content_id):
                 ]),
                 key=element['h3'][0]
             ))
+        """
 
         for element in html_elements:
             if "入力例" in element['h3'][0]:
-                elevate_button.append(
+                elevate1_button.append(
                     ft.ElevatedButton(
                         text=element['h3'][0],
-                        on_click=pyperclip.copy(element['pre'][0]),
+                        on_click=example_question,
                     )
                 )
 
@@ -163,7 +164,8 @@ def contest_loader(page,content_id):
 
         page.add(
             ft.Container(cl, border=ft.border.all(1)),
-            ft.Column([ft.Text("Scroll to:"), ft.Row(elevate_button)]),
+            ft.Column([ft.Text("例を表示:"), ft.Row(elevate1_button)]),
+            ft.Column([ft.Text("例をコピー:"), ft.Row(elevate2_button)]),
         )
 
     def on_tab_change(e):

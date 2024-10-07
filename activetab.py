@@ -4,6 +4,9 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)  # これにより全てのオリジンからのリクエストを許可
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 shared_data = []
 @app.route('/receive_data', methods=['POST'])
 def receive_data():
@@ -11,7 +14,7 @@ def receive_data():
     if shared_data is not None:
         with open("qiita_write.json", mode="w", encoding="utf-8") as f:
             json.dump(shared_data, f)
-        print("Received data:", shared_data)
+        print(f"\rReceived data:{ shared_data}",end="")
     return jsonify({'status': 'success'})
 
 def run_flask():
