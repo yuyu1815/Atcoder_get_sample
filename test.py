@@ -2,6 +2,7 @@
 import flet as ft
 import re,time,json
 
+from keyboard_shortcut import start_shortcut_watch
 from recest import get_html_data
 
 
@@ -23,5 +24,11 @@ def main(page: ft.Page):
             time.sleep(0.3)
             page.controls.clear()
             page.update()
-
-ft.app(target=main)
+def test2(old_urls):
+    match = re.search(r"https://atcoder\.jp/contests/([^/]+)/tasks/([^/]+)", old_urls)
+    print (match.group(1), match.group(2))
+#keyboard
+#start_shortcut_watch()
+#GUI
+#ft.app(target=main)
+test2("https://atcoder.jp/contests/abc374/tasks/abc374_a")
