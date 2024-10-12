@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Configurable URL Saver</title>
+    <style>
+        /* CSSを追加 */
+        li {
+            list-style-type: none;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <label for="interval">間隔（秒）:</label>
+        <input type="number" id="interval" min="1">
+        <button id="saveInterval">保存</button>
+    </div>
+    <ul id="urlList"></ul>
+    <script src="popup.js"></script>
+</body>
+</html>

@@ -4,7 +4,8 @@ import flet as ft
 import re,time,json
 import activetab
 from recest import contests, get_url_data
-
+import keyboard
+import threading
 
 page_active_bool = False
 msg_hint_bool = False
@@ -13,7 +14,7 @@ def main(page: ft.Page):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.window_width = 500  # 幅
-    page.window_height = 600  # 高さ
+    page.window_height = 650  # 高さ
     name_input = ft.TextField(label="実行するURLを入れてください(なくても動きます)")
 
     def on_play_button_click(e):
@@ -30,13 +31,16 @@ def main(page: ft.Page):
         json.dump("", f)
     # ページにボタンを追加
     page.add(name_input, play_button)
+
 def page_clean(page: ft.Page):
     page.controls.clear()
     page.update()
+
 def sab_page(url, page: ft.Page):
     def contest_cancel_button_click(e):
         page.controls.clear()
         page.window.close()
+        threading.Thread(target=watch_shortcut, daemon=True).raise_exception()
     # サーバー
     activetab.start_flask()
     # ページをクリア
@@ -47,6 +51,7 @@ def sab_page(url, page: ft.Page):
         # 新たな内容を追加
         page.add(ft.Text(f"新しいページが生成されました。URL: {match}"))
         page.update()
+
     else:
         dot = ""
         while True:
@@ -101,7 +106,7 @@ def sab_page(url, page: ft.Page):
             for url in load_url:
                 if "https://atcoder.jp/contests/" != url[0] and "https://atcoder.jp/?lang" not in url[0] and "https://atcoder.jp/" != url[0] and "https://atcoder.jp/home" != url[0]:
                     re_load_url.append(url)
-        
+
 def contest_loader(page,content_id):
     # curl
     questions, questions_url = contests(content_id)
@@ -136,16 +141,16 @@ def contest_loader(page,content_id):
                 active_tab_element(active_tab)
 
         page.update()
-    def example_question(pre_text):
 
-        print("例を表示します")
     def active_tab_element(active_tab):
         print(questions[active_tab - 1])
         html_elements = get_url_data(questions_url[active_tab - 1])
         controls = []
         elevate1_button = []
         elevate2_button = []
-
+        q_list = []
+        a_list = []
+        copy_list = ""
         for element in html_elements:
             controls.append(ft.Container(
                 ft.Column([
@@ -154,8 +159,11 @@ def contest_loader(page,content_id):
                 ]),
                 key=element['h3'][0]
             ))
+            copy_list += f"{element['h3'][0]}\n{element['pre'][0]}\n"
         for element in html_elements:
+
             if "入力例" in element['h3'][0]:
+                q_list.append(element['pre'][0])
                 elevate1_button.append(
                     ft.ElevatedButton(
                         text=element['h3'][0],
@@ -169,7 +177,6 @@ def contest_loader(page,content_id):
                         on_click=lambda e, pre_text=element['pre'][0]: pyperclip.copy(pre_text),
                     )
                 )
-
         cl = ft.Column(
             spacing=10,
             height=300,
@@ -177,12 +184,28 @@ def contest_loader(page,content_id):
             scroll=ft.ScrollMode.ALWAYS,
             controls=controls,
         )
+        replacements = {
+            "入力例": "case",
+            "出力例": "answer",
+            "answer 1": "answer",
+            "answer 2": "answer",
+            "answer 3": "answer",
+            "answer 4": "answer",
+            "answer 5": "answer"
+        }
+        # 置換えて表示
+        for old, new in replacements.items():
+            copy_list = copy_list.replace(old, new)
 
+        temp = [ft.ElevatedButton(text="コピー", on_click=lambda e, pre_text=copy_list: pyperclip.copy(pre_text))]
         page.add(
             ft.Container(cl, border=ft.border.all(1)),
+            ft.Column([ft.Text("すべてコピー"), ft.Row(temp)]),
             ft.Column([ft.Text("例を表示:"), ft.Row(elevate1_button)]),
-            ft.Column([ft.Text("例をコピー:"), ft.Row(elevate2_button)]),
+            ft.Column([ft.Text("例入力をコピー:"), ft.Row(elevate2_button)]),
         )
+        global question_list
+        question_list = [q_list,a_list]
 
     def on_tab_change(e):
         _tab(tabs.selected_index)
@@ -244,5 +267,30 @@ def contest_loader(page,content_id):
                     break
             old_url = now_url
 
+#キーボードショートカット
+def watch_shortcut():
+    def on_shortcut(key_1, key_2):
+        print("Please")
+        try:
+            keyboard.write(question_list[key_1][key_2])
+        except:
+            pass
+
+    #question
+    keyboard.add_hotkey('ctrl+1',lambda: on_shortcut(0,0))
+    keyboard.add_hotkey('ctrl+2',lambda: on_shortcut(0,1))
+    keyboard.add_hotkey('ctrl+3',lambda: on_shortcut(0,2))
+    keyboard.add_hotkey('ctrl+4',lambda: on_shortcut(0,3))
+    keyboard.add_hotkey('ctrl+5',lambda: on_shortcut(0,4))
+    #answer
+    keyboard.add_hotkey('ctrl+shift+1',lambda: on_shortcut(1,0))
+    keyboard.add_hotkey('ctrl+shift+2',lambda: on_shortcut(1,1))
+    keyboard.add_hotkey('ctrl+shift+3',lambda: on_shortcut(1,2))
+    keyboard.add_hotkey('ctrl+shift+4',lambda: on_shortcut(1,3))
+    keyboard.add_hotkey('ctrl+shift+5',lambda: on_shortcut(1,4))
+
+    keyboard.wait()  # プログラムが終了しないように待機
+
+threading.Thread(target=watch_shortcut, daemon=True).start()
 # アプリを実行
 ft.app(target=main)
