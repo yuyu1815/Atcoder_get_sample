@@ -1,9 +1,6 @@
 
 import flet as ft
-import re,time,json
-
-from keyboard_shortcut import start_shortcut_watch
-from recest import get_html_data
+import re,time
 
 
 def main(page: ft.Page):

@@ -1,4 +1,3 @@
-from turtledemo.paint import switchupdown
 import pyperclip
 import flet as ft
 import re,time,json
@@ -27,7 +26,7 @@ def main(page: ft.Page):
         height=100,
         on_click=on_play_button_click
     )
-    with open("qiita_write.json", mode="w", encoding="utf-8") as f:
+    with open("../qiita_write.json", mode="w", encoding="utf-8") as f:
         json.dump("", f)
     # ページにボタンを追加
     page.add(name_input, play_button)
@@ -268,6 +267,7 @@ def contest_loader(page,content_id):
             old_url = now_url
 
 #キーボードショートカット
+"""
 def watch_shortcut():
     def on_shortcut(key_1, key_2):
         print("Please")
@@ -292,5 +292,6 @@ def watch_shortcut():
     keyboard.wait()  # プログラムが終了しないように待機
 
 threading.Thread(target=watch_shortcut, daemon=True).start()
+"""
 # アプリを実行
 ft.app(target=main)
