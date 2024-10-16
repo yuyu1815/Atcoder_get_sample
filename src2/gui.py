@@ -1,14 +1,14 @@
 import flet as ft
 import re,time,json
 from activetab import start_flask
-from recest import contests
+from recest import contests, get_url_data
 
 
 class GUI:
     def __init__(self):
         self.url_text_field = None
         self.contest_name = None
-        self.contest_Q_ids = []
+        self.contest_Q_urls = []
         self.contest_Q_names = []
 
     def start(self, page: ft.Page):
@@ -63,11 +63,29 @@ class GUI:
             ])
         def contest_window():
             self.contest_name = re.search(r"https://atcoder\.jp/contests/([^/]+)", self.url_text_field.value).group(1)
-            self.contest_Q_ids, self.contest_Q_names = contests(self.contest_name)
+            self.contest_Q_urls, self.contest_Q_names = contests(self.contest_name)
+
+            tabs = []
+            for contest_Q_url,contest_Q_name in zip(self.contest_Q_urls, self.contest_Q_names):
+                questions,answers = get_url_data(contest_Q_url)
+                contents = ""
+                for question,answer in zip(questions, answers):
+                    contents += f"case\n{question}answer\n{answer}"
+                tabs.append(ft.Tab(text=contest_Q_name, route=f"/view3/{contest_Q_name}", ))
+
+
+            cl = ft.Column(
+                spacing=10,
+                height=300,
+                width=500,
+                scroll=ft.ScrollMode.ALWAYS,
+                controls=ft.Container(ft.Column([ft.Text(contents)])),
+            )
             return ft.View("/view3", [
                 ft.AppBar(title=ft.Text("コンテスト"),
                           bgcolor=ft.colors.RED),
-                ft.Text(f"{self.contest_Q_ids}, {self.contest_Q_names}")
+                ft.Container(cl, border=ft.border.all(1)),
+                ft.Text(f"{self.contest_Q_urls}, {self.contest_Q_names}")
             ])
         page.title = "Atcoder_sample_get"
         page.horizontal_alignment = ft.CrossAxisAlignment.CENTER

@@ -39,17 +39,16 @@ def get_url_data(url):
     soup = BeautifulSoup(html, 'html.parser')
     div_tags = soup.find_all('div', class_='part')
 
-    return_tags = []
+    q_list = []
+    a_list = []
     for div in div_tags:
-        if "入力例" in div.text or "出力例" in div.text:
-            h3_tags = div.find_all('h3')
+        if "入力例" in div.text:
             pre_tags = div.find_all('pre')
-            p_tags = div.find_all('p')
-            return_tags.append({
-                'h3': [h3.get_text() for h3 in h3_tags],
-                'pre': [pre.get_text() for pre in pre_tags],
-                'p': [p.get_text() for p in p_tags]
-            })
-    return return_tags
+            q_list.append(pre_tags[0].get_text())
+        if  "出力例" in div.text:
+            pre_tags = div.find_all('pre')
+            a_list.append(pre_tags[0].get_text())
+
+    return q_list,a_list
 
 print(get_url_data("https://atcoder.jp/contests/agc068/tasks/agc068_a"))
