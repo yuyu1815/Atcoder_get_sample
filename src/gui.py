@@ -5,6 +5,9 @@ import activetab
 from recest import contests, get_url_data
 import keyboard
 import threading
+import atexit
+
+from src2.activetab import stop_flask
 
 page_active_bool = False
 msg_hint_bool = False
@@ -16,6 +19,8 @@ def main(page: ft.Page):
     page.window_height = 650  # 高さ
     name_input = ft.TextField(label="実行するURLを入れてください(なくても動きます)")
 
+
+# スレッド停止のフラグを立てる
     def on_play_button_click(e):
         sab_page(name_input.value, page)
 
@@ -293,5 +298,10 @@ def watch_shortcut():
 
 threading.Thread(target=watch_shortcut, daemon=True).start()
 """
+
+
+def cleanup():
+    stop_flask()
+atexit.register(cleanup)
 # アプリを実行
 ft.app(target=main)

@@ -1,4 +1,6 @@
 import re, requests
+import time
+
 from bs4 import BeautifulSoup
 
 
@@ -35,6 +37,7 @@ def contests(contest_id):
     else:
         return None, None
 def get_url_data(url):
+    time.sleep(0.15)
     html = get_html_data(url)
     soup = BeautifulSoup(html, 'html.parser')
     div_tags = soup.find_all('div', class_='part')
