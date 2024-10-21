@@ -1,5 +1,8 @@
 import flet as ft
 import re,time,json
+
+import pyperclip
+
 from activetab import start_flask
 from recest import contests, get_url_data
 
@@ -10,6 +13,8 @@ class GUI:
         self.contest_name = None
         self.contest_Q_urls = []
         self.contest_Q_names = []
+
+        self.download_button = False
 
     def start(self, page: ft.Page):
         # error閉じる
@@ -25,6 +30,8 @@ class GUI:
         def route_change(handler):
             troute = ft.TemplateRoute(handler.route)
             if troute.match("/view1"):
+                page.views.append(main_window())
+            if troute.match("/view1_download"):
                 page.views.append(main_window())
             elif troute.match("/view2"):
                 page.views.append(sab_page())
@@ -52,9 +59,25 @@ class GUI:
                     text="▶",
                     width=100,
                     height=100,
-                    on_click=lambda _: page.go("/view3") if "https://atcoder.jp/contests/" in self.url_text_field.value else page.go("/view2") if self.url_text_field.value is None else open_dlg("URLが正しくありません")
+                    on_click=goto_page
                 ),
+                ft.ElevatedButton(
+                    text="ダウンロード",
+                    width=100,
+                    height=100,
+                    on_click=lambda e:
+                )
             ])
+        def goto_page():
+            if("https://atcoder.jp/contests/" in self.url_text_field.value):
+                if self.download_button:
+                    page.go("/view1_download")
+                else:
+                    page.go("/view3")
+            elif(self.url_text_field.value is None):
+                page.go("/view2")
+            else:
+                open_dlg("URLが正しくありません")
         def sab_page():
             return ft.View("/view2", [
                 ft.AppBar(title=ft.Text("コンテスト情報"),
@@ -112,7 +135,10 @@ class GUI:
                 main_content = ft.Column([
                     tabs_view,
                     ft.Container(
-                        content=ft.Text(f"URLs: {self.contest_Q_urls}\nNames: {self.contest_Q_names}"),
+                        content=ft.ElevatedButton(
+                            text="すべてをコピー",
+                            on_click=lambda e, pre_text=contents: pyperclip.copy(pre_text),
+                        ),
                         margin=ft.margin.only(top=10)
                     )
                 ], expand=True)  # メインコンテンツも拡張
