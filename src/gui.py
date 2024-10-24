@@ -7,7 +7,6 @@ import keyboard
 import threading
 import atexit
 
-from src2.activetab import stop_flask
 
 page_active_bool = False
 msg_hint_bool = False

@@ -57,15 +57,15 @@ class GUI:
                 self.url_text_field,
                 ft.ElevatedButton(
                     text="▶",
-                    width=100,
-                    height=100,
-                    on_click=goto_page
+                    width=60,
+                    height=60,
+                    on_click=lambda _: goto_page()
                 ),
                 ft.ElevatedButton(
                     text="ダウンロード",
-                    width=100,
-                    height=100,
-                    on_click=lambda e:
+                    width=150,
+                    height=50,
+                    on_click= lambda _: self.all_download()
                 )
             ])
         def goto_page():
@@ -190,8 +190,30 @@ class GUI:
         page.overlay.append(dlg)
         page.go("/view1")
 
+    def all_download(self):
+        # URLからコンテスト名を取得
+        match = re.search(r"https://atcoder\.jp/contests/([^/]+)", self.url_text_field.value)
+        if match is None:
+            print("エラー: URLが無効です。")
+            return  # または適切なエラーメッセージを表示する
+
+        self.contest_name = match.group(1)
+        self.contest_Q_names, self.contest_Q_urls = contests(self.contest_name)
+
+        # タブの作成
+        tabs_data = []
+        key_list = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",
+                    "U", "V", "W", "X", "Y", "Z"]
+        for i in range(len(self.contest_Q_names)):
+            questions, answers = get_url_data(self.contest_Q_urls[i])
+            with open(f"./out/{key_list[i]}.txt", mode="w", encoding="utf-8") as f:  # 拡張子を変更
+                for question, answer in zip(questions, answers):
+                    # 改行を整理
+                    question_cleaned = "\n".join(line.strip() for line in question.splitlines() if line.strip())
+                    answer_cleaned = "\n".join(line.strip() for line in answer.splitlines() if line.strip())
+                    f.write(f"case\n{question_cleaned}\nanswer\n{answer_cleaned}\n")
 
 
 if __name__ == "__main__":
-    start_flask()
+    #start_flask()
     ft.app(target=GUI().start)
