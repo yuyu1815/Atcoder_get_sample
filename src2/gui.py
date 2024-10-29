@@ -1,20 +1,19 @@
 import flet as ft
-import re,time,json
-
+import re
 import pyperclip
-
-from activetab import start_flask
-from recest import contests, get_url_data
+import recest
 
 
 class GUI:
     def __init__(self):
+        self.real_time = False
         self.url_text_field = None
         self.contest_name = None
         self.contest_Q_urls = []
         self.contest_Q_names = []
 
         self.download_button = False
+        self.request_data = recest.Atcoder()
 
     def start(self, page: ft.Page):
         # error閉じる
@@ -55,6 +54,7 @@ class GUI:
             return ft.View("/view1", [
                 ft.AppBar(title=ft.Text("Menu"), bgcolor=ft.colors.RED),
                 self.url_text_field,
+                ft.Switch(label="リアルタイム", on_change=self.real_time, value=self.real_time),
                 ft.ElevatedButton(
                     text="▶",
                     width=60,
@@ -90,12 +90,12 @@ class GUI:
                 # URLからコンテスト名を取得
                 self.contest_name = re.search(r"https://atcoder\.jp/contests/([^/]+)", self.url_text_field.value).group(
                     1)
-                self.contest_Q_names, self.contest_Q_urls = contests(self.contest_name)
+                self.contest_Q_names, self.contest_Q_urls = self.request_data.contests(self.contest_name,self.real_time)
 
                 # タブの作成
                 tabs_data = []
                 for contest_Q_url, contest_Q_name in zip(self.contest_Q_urls, self.contest_Q_names):
-                    questions, answers = get_url_data(contest_Q_url)
+                    questions, answers = self.request_data.get_url_data(contest_Q_url,self.real_time)
                     contents = ""
                     for question, answer in zip(questions, answers):
                         contents += f"case\n\n{question}\nanswer\n\n{answer}\n"
@@ -198,14 +198,14 @@ class GUI:
             return  # または適切なエラーメッセージを表示する
 
         self.contest_name = match.group(1)
-        self.contest_Q_names, self.contest_Q_urls = contests(self.contest_name)
+        self.contest_Q_names, self.contest_Q_urls = self.request_data.contests(self.contest_name,self.real_time)
 
         # タブの作成
         tabs_data = []
         key_list = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",
                     "U", "V", "W", "X", "Y", "Z"]
         for i in range(len(self.contest_Q_names)):
-            questions, answers = get_url_data(self.contest_Q_urls[i])
+            questions, answers = self.request_data.get_url_data(self.contest_Q_urls[i],self.real_time)
             with open(f"./out/{key_list[i]}.txt", mode="w", encoding="utf-8") as f:  # 拡張子を変更
                 for question, answer in zip(questions, answers):
                     # 改行を整理
