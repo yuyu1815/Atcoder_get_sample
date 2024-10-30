@@ -8,10 +8,14 @@ from time import sleep
 import json
 
 class Atcoder():
-    def __init__(self):
+    def __init__(self,login_is_valid=False):
         self.login = None
-        self.name ,self.password = self.load_login()
-        self.session = self.login_session()
+        if(login_is_valid):
+            self.load_login()
+            self.session = self.login_session()
+        else:
+            self.name ,self.password = None,None
+
 
     #login save
     @staticmethod
@@ -19,24 +23,26 @@ class Atcoder():
         with open("./login.json", mode="w", encoding="utf-8") as f:
             json.dump({'name':name,'password':password}, f)
     #ログインload
-    @staticmethod
-    def load_login():
+
+    def load_login(self):
         try:
             with open("./login.json", mode="r", encoding="utf-8") as f:
                 data = json.load(f)
         except:
             print("login.jsonが見つかりません。")
-            sys.exit()
-        return data['name'],data['password']
+            exit()
+        self.name = data['name']
+        self.password = data['password']
     def login_session(self):
         login_url = "https://atcoder.jp/login"
-        session = requests.session() # sessionを作成
-        res = session.get(login_url) # cookieを取得するためにgetでアクセス
-        revel_session = res.cookies.get_dict()['REVEL_SESSION'] # revel_sessionを取得
-        revel_session = urllib.parse.unquote(revel_session) # revel_sessionをデコード
-        csrf_token = re.search(r'csrf_token\:(.*)_TS', revel_session).groups()[0].replace('\x00\x00', '') # csrf_tokenを正規表現で取得し、余分な文字を除去する
-        sleep(1) # 取得するまで待つ
-        headers = {'content-type': 'application/x-www-form-urlencoded'}
+        session = requests.session()  # sessionを作成
+        res = session.get(login_url)  # cookieを取得するためにgetでアクセス
+        revel_session = res.cookies.get_dict()['REVEL_SESSION']  # revel_sessionを取得
+        revel_session = urllib.parse.unquote(revel_session)  # revel_sessionをデコード
+        csrf_token = re.search(r'csrf_token\:(.*)_TS', revel_session).groups()[0].replace('\x00\x00',
+                                                                                          '')  # csrf_tokenを正規表現で取得し、余分な文字を除去する
+        sleep(1)  # 取得するまで待つ
+        headers = {'content-type': 'application/x-www-form-urlencoded'}  # ヘッダーの定義
         params = {
             'username': self.name,
             'password': self.password,
@@ -112,3 +118,6 @@ class Atcoder():
                 pre_tags = div.find_all('pre')
                 a_list.append(pre_tags[0].get_text())
         return q_list, a_list
+
+#print(Atcoder(True).contests("practice",True))
+#print(Atcoder(True).get_real_time_html_data("https://atcoder.jp/contests/practice/tasks/practice_1"))

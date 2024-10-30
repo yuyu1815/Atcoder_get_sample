@@ -11,9 +11,8 @@ class GUI:
         self.contest_name = None
         self.contest_Q_urls = []
         self.contest_Q_names = []
-
+        self.request_data = None
         self.download_button = False
-        self.request_data = recest.Atcoder()
 
     def start(self, page: ft.Page):
         # error閉じる
@@ -54,7 +53,11 @@ class GUI:
             return ft.View("/view1", [
                 ft.AppBar(title=ft.Text("Menu"), bgcolor=ft.colors.RED),
                 self.url_text_field,
-                ft.Switch(label="リアルタイム", on_change=self.real_time, value=self.real_time),
+                ft.Switch(
+                    label="リアルタイム",
+                    on_change=lambda e: setattr(self, 'real_time', not self.real_time),
+                    value=self.real_time,
+                ),
                 ft.ElevatedButton(
                     text="▶",
                     width=60,
@@ -73,6 +76,7 @@ class GUI:
                 if self.download_button:
                     page.go("/view1_download")
                 else:
+                    self.request_data = recest.Atcoder(self.real_time)
                     page.go("/view3")
             elif(self.url_text_field.value is None):
                 page.go("/view2")
@@ -91,32 +95,43 @@ class GUI:
                 self.contest_name = re.search(r"https://atcoder\.jp/contests/([^/]+)", self.url_text_field.value).group(
                     1)
                 self.contest_Q_names, self.contest_Q_urls = self.request_data.contests(self.contest_name,self.real_time)
-
+                print(self.contest_Q_names,self.contest_Q_urls)
                 # タブの作成
                 tabs_data = []
                 for contest_Q_url, contest_Q_name in zip(self.contest_Q_urls, self.contest_Q_names):
-                    questions, answers = self.request_data.get_url_data(contest_Q_url,self.real_time)
+                    questions, answers = self.request_data.get_url_data(contest_Q_url, self.real_time)
                     contents = ""
                     for question, answer in zip(questions, answers):
                         contents += f"case\n\n{question}\nanswer\n\n{answer}\n"
 
-                    # スクロール可能なコンテナを作成
-                    scrollable_content = ft.Container(
-                        content=ft.Column([
-                            ft.Text(contents)
-                        ]),
+                    # コピーボタンを含むヘッダー部分
+                    header = ft.Container(
+                        content=ft.ElevatedButton(
+                            text="すべてをコピー",
+                            on_click=lambda e, pre_text=contents: pyperclip.copy(pre_text),
+                        ),
+                        margin=ft.margin.only(bottom=10)
+                    )
+
+                    # スクロール可能なテキストコンテンツ
+                    scrollable_text = ft.Container(
+                        content=ft.Text(contents),
                         padding=10,
-                        height=400,  # コンテナの高さを固定
-                        expand=True  # 利用可能なスペースいっぱいに広がる
+                        height=350,  # スクロール領域の高さを調整
+                        border=ft.border.all(1, ft.colors.GREY_400),
+                        border_radius=8
                     )
 
                     tab = ft.Tab(
                         text=contest_Q_name,
                         content=ft.Container(
                             content=ft.Column(
-                                [scrollable_content],
-                                scroll=ft.ScrollMode.ALWAYS,  # スクロールを有効化
-                                expand=True,  # 利用可能なスペースいっぱいに広がる
+                                [
+                                    header,  # コピーボタンを最上部に配置
+                                    scrollable_text  # スクロール可能なテキスト領域
+                                ],
+                                scroll=ft.ScrollMode.NONE,  # メインのColumnではスクロールを無効化
+                                expand=True,
                                 spacing=10
                             ),
                             padding=10
@@ -131,17 +146,6 @@ class GUI:
                     expand=True  # タブビューも拡張
                 )
 
-                # メインコンテンツの作成
-                main_content = ft.Column([
-                    tabs_view,
-                    ft.Container(
-                        content=ft.ElevatedButton(
-                            text="すべてをコピー",
-                            on_click=lambda e, pre_text=contents: pyperclip.copy(pre_text),
-                        ),
-                        margin=ft.margin.only(top=10)
-                    )
-                ], expand=True)  # メインコンテンツも拡張
 
                 return ft.View(
                     "/view3",
@@ -155,7 +159,7 @@ class GUI:
                             bgcolor=ft.colors.RED
                         ),
                         ft.Container(
-                            content=main_content,
+                            content=tabs_view,
                             padding=10,
                             border=ft.border.all(1),
                             expand=True  # コンテナも拡張
@@ -202,7 +206,8 @@ class GUI:
 
         # タブの作成
         tabs_data = []
-        key_list = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",
+        key_list = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J",
+                    "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",
                     "U", "V", "W", "X", "Y", "Z"]
         for i in range(len(self.contest_Q_names)):
             questions, answers = self.request_data.get_url_data(self.contest_Q_urls[i],self.real_time)
