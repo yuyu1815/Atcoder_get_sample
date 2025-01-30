@@ -2,7 +2,7 @@ import flet as ft
 import re
 import pyperclip
 import recest
-
+import sys
 
 class GUI:
     def __init__(self):
@@ -98,17 +98,24 @@ class GUI:
                 print(self.contest_Q_names,self.contest_Q_urls)
                 # タブの作成
                 tabs_data = []
+                # 各タブの内容を格納するリスト
+                tab_contents = []
                 for contest_Q_url, contest_Q_name in zip(self.contest_Q_urls, self.contest_Q_names):
                     questions, answers = self.request_data.get_url_data(contest_Q_url, self.real_time)
+                    if questions is None or answers is None:
+                        continue
                     contents = ""
                     for question, answer in zip(questions, answers):
                         contents += f"case\n\n{question}\nanswer\n\n{answer}\n"
+
+                    # タブの内容をリストに追加
+                    tab_contents.append(contents)
 
                     # コピーボタンを含むヘッダー部分
                     header = ft.Container(
                         content=ft.ElevatedButton(
                             text="すべてをコピー",
-                            on_click=lambda e, pre_text=contents: pyperclip.copy(pre_text),
+                            on_click=lambda e, index=len(tab_contents) - 1: pyperclip.copy(tab_contents[index]),
                         ),
                         margin=ft.margin.only(bottom=10)
                     )
@@ -130,7 +137,7 @@ class GUI:
                                     header,  # コピーボタンを最上部に配置
                                     scrollable_text  # スクロール可能なテキスト領域
                                 ],
-                                scroll=ft.ScrollMode.NONE,  # メインのColumnではスクロールを無効化
+                                #scroll=ft.ScrollMode.NONE,  # メインのColumnではスクロールを無効化
                                 expand=True,
                                 spacing=10
                             ),
@@ -167,7 +174,10 @@ class GUI:
                     ]
                 )
             except Exception as e:
-                print(f"Error in contest_window: {str(e)}")
+                exception_type, exception_object, exception_traceback = sys.exc_info()
+                filename = exception_traceback.tb_frame.f_code.co_filename
+                line_no = exception_traceback.tb_lineno
+                print(f"{filename}の{line_no}行目でエラーが発生しました。詳細：{e}")
                 return ft.View(
                     "/view3",
                     [

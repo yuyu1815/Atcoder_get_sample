@@ -1,4 +1,3 @@
-
 import time
 import requests
 import sys, re
@@ -89,7 +88,7 @@ class Atcoder():
         for row in soup.find_all('tr'):
             columns = row.find_all('a')
             if len(columns) >= 2:
-                problem_name = columns[1].text
+                problem_name = columns[1].text if len(columns[1].text) < 20 else columns[1].text[:20] + "..."
                 problem_url = base_url + columns[1]['href']
                 questions.append(problem_name)
                 questions_url.append(problem_url)
@@ -101,23 +100,24 @@ class Atcoder():
             return None, None
     def get_url_data(self,url,real_time):
         time.sleep(0.15)
-        if real_time:
-            html = self.get_real_time_html_data(url)
-        else:
-            html = self.get_html_data(url)
-        soup = BeautifulSoup(html, 'html.parser')
-        div_tags = soup.find_all('div', class_='part')
+        try:
+            if real_time:
+                html = self.get_real_time_html_data(url)
+            else:
+                html = self.get_html_data(url)
+            soup = BeautifulSoup(html, 'html.parser')
+            div_tags = soup.find_all('div', class_='part')
 
-        q_list = []
-        a_list = []
-        for div in div_tags:
-            if "入力例" in div.text:
-                pre_tags = div.find_all('pre')
-                q_list.append(pre_tags[0].get_text())
-            if  "出力例" in div.text:
-                pre_tags = div.find_all('pre')
-                a_list.append(pre_tags[0].get_text())
-        return q_list, a_list
-
-#print(Atcoder(True).contests("practice",True))
-#print(Atcoder(True).get_real_time_html_data("https://atcoder.jp/contests/practice/tasks/practice_1"))
+            q_list = []
+            a_list = []
+            for div in div_tags:
+                if "入力例" in div.text:
+                    pre_tags = div.find_all('pre')
+                    q_list.append(pre_tags[0].get_text())
+                if  "出力例" in div.text:
+                    pre_tags = div.find_all('pre')
+                    a_list.append(pre_tags[0].get_text())
+            return q_list, a_list
+        except:
+            print('invalid url or contest name')
+            return None, None
